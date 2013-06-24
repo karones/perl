@@ -1,0 +1,57 @@
+#!/usr/bin/perl
+
+#use strict;
+use DBI;
+init_params();
+$vendor_id=join(',',@ARGV);
+my $sth = $DBCONN->prepare("Select macprefix  FROM p_macprefix where p_vendor_id in ($vendor_id)");
+my $rv = $sth->execute;
+my @mac;
+while (@row=$sth->fetchrow_array){
+                $row[0]=~s/\w\w/$&:/g;
+                push (@mac, $row[0]);
+                }
+
+warn @mac;
+$col=@mac;
+my $tbllist = $DBCONN->table_info('%','%','P_ONLINEHOST_%','TABLE');
+        while(my $t = $tbllist->fetchrow_hashref){
+                my $tbl = $t->{TABLE_NAME};
+                foreach $i(0..$col-1){
+                        warn "$tbl=>$mac[$i]";
+                         $sth=$DBCONN->prepare("delete FROM $tbl  where mac like '$mac[$i]\%'");
+                         $rv = $sth->execute;
+                                     }
+
+                                                }
+close_db();
+
+
+sub init_db{
+        $DBCONN = DBI->connect("DBI:Pg:database=$DB_DB;host=$DB_HOST", $DB_USER, $DB_PASS, {AutoCommit => 1, RaiseError => 1, PrintError => 0});
+        if (!defined($DBCONN)){
+                die "Cant connect to $DB_DB!";
+                              }
+}
+
+sub init_params {
+        $DB_HOST='github';
+        $DB_DB='github';
+        $DB_USER='github';
+        $DB_PASS='github';
+        $DB_SID='010500000000000515000000ef13c62941c961ff18feea5b063d0000';
+        $DB_PORT='5432';
+        init_db();
+
+}
+
+sub do_commit{
+        #debug_print('DEBUG',"Doing COMMIT");
+        $DBCONN->commit;
+}
+
+sub close_db{
+        $DBCONN->{RaiseError}=0;
+        $DBCONN->disconnect if defined $DBCONN;
+        undef $DBCONN;
+}
