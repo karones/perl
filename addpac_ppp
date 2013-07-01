@@ -1,0 +1,43 @@
+#!/usr/bin/perl
+
+use Net::Telnet ();
+use strict;
+#накат 2 параметров на addpacс.
+#на вход подается city_id города на который проводится накат
+#пароли берутся из файла add_pac_pas
+#ip из файла ip_pppoe
+
+
+
+open (my $FILE, "<./ip_pppoe");
+open (my $file_pas, "<./add_pac_pas");
+my (@credentials);
+
+while (<$file_pas>){
+        $_=~s/"//g;
+        @credentials=split(';',$_);
+
+        if ($credentials[0]=$ARGV[0]){
+        while (<$FILE>){
+                my $ip=$_;
+                $ip=~s/\s+//g;
+                my $login="root";
+                my $password="router";
+                my $r=Net::Telnet->new(HOST=>$ip);
+                $r->login($login, $password);
+                $r->cmd("enable");
+                $r->cmd("Configure term");
+                $r->cmd("interface FastEthernet 0/0");
+                $r->cmd("ppp lcp echo-request interval 200");
+                $r->cmd("ppp lcp echo-request timeout  200");
+                $r->close;
+                print("$ip update \n");
+        }
+        }
+        last;
+                                }
+close ($FILE);
+print ("Completed \n");
+
+
+
