@@ -6,12 +6,9 @@ use strict;
 #пароли берутся из файла add_pac_pas
 #ip из файла ip_pppoe
 
-
-
 open (my $FILE, "<./ip_pppoe");
 open (my $file_pas, "<./add_pac_pas");
 my (@credentials);
-
 while (<$file_pas>){
         $_=~s/"//g;
         @credentials=split(';',$_);
