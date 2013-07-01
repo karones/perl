@@ -19,11 +19,8 @@ while (<$file_pas>){
 
         if ($credentials[0]=$ARGV[0]){
         while (<$FILE>){
-                my $ip=$_;
-                $ip=~s/\s+//g;
-                my $login="root";
-                my $password="router";
-                my $r=Net::Telnet->new(HOST=>$ip);
+                $_=~s/\s+//g;
+                my $r=Net::Telnet->new(HOST=>$_);
                 $r->login($login, $password);
                 $r->cmd("enable");
                 $r->cmd("Configure term");
@@ -31,7 +28,7 @@ while (<$file_pas>){
                 $r->cmd("ppp lcp echo-request interval 200");
                 $r->cmd("ppp lcp echo-request timeout  200");
                 $r->close;
-                print("$ip update \n");
+                print("$_ update \n");
         }
         }
         last;
