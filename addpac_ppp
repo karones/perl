@@ -2,7 +2,6 @@
 
 use Net::Telnet ();
 use strict;
-#накат 2 параметров на addpacс.
 #на вход подается city_id города на который проводится накат
 #пароли берутся из файла add_pac_pas
 #ip из файла ip_pppoe
@@ -21,7 +20,7 @@ while (<$file_pas>){
         while (<$FILE>){
                 $_=~s/\s+//g;
                 my $r=Net::Telnet->new(HOST=>$_);
-                $r->login($login, $password);
+                $r->login($credentials[1], $credentials[2]);
                 $r->cmd("enable");
                 $r->cmd("Configure term");
                 $r->cmd("interface FastEthernet 0/0");
@@ -35,6 +34,3 @@ while (<$file_pas>){
                                 }
 close ($FILE);
 print ("Completed \n");
-
-
-
