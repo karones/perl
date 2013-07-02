@@ -1,33 +1,56 @@
 #!/usr/bin/perl
 
-use Net::Telnet ();
+use Net::Telnet;
+use Data::Dumper;
+use warnings;
 use strict;
-#на вход подается city_id города на который проводится накат
-#пароли берутся из файла add_pac_pas
-#ip из файла ip_pppoe
-
+my @cred;
+my @credentials;
 open (my $FILE, "<./ip_pppoe");
 open (my $file_pas, "<./add_pac_pas");
-my (@credentials);
 while (<$file_pas>){
         $_=~s/"//g;
-        @credentials=split(';',$_);
+	@credentials = split(';',$_);
+	if ($credentials[0]==$ARGV[0]){
+		my $s;
+		$s->{login} = $credentials[1];
+		$s->{password} = $credentials[2];
+		push @cred, $s;
+	}
+}
+print Dumper(@cred);
+close $file_pas;
+while (<$FILE>){
+        my $flag=0;
+        $_=~s/\s+//g;
+        my $ip=$_;
+        #print "ip=$ip";
+        foreach my $k (@cred){
+			#print "$k->{login} $k->{password}";
+			my $r = Net::Telnet->new(Errmode => "return", Timeout => 5);
+			$r->open($ip);
+			if ($r->errmsg){
+				print $r->errmsg."\n";
+			}
+			$r->login($k->{login}, $k->{password});
+			if ($r->errmsg=~m/login failed/){
+					print "$ip acsess denied \n";
+					$r->close;
+					sleep 1;
+			}else{
+					$r->cmd("enable");
+					$r->cmd("Configure term");
+					$r->cmd("interface FastEthernet 0/0");
+					$r->cmd("ppp lcp echo-request interval 200");
+					$r->cmd("ppp lcp echo-request timeout  200");
+					$r->close;
+					sleep 1;
+					print("$ip update \n");
+					goto FINISH;
+			}
+			
+        }
+		FINISH:
+		print "next ip...\n";
+}
 
-        if ($credentials[0]=$ARGV[0]){
-        while (<$FILE>){
-                $_=~s/\s+//g;
-                my $r=Net::Telnet->new(HOST=>$_);
-                $r->login($credentials[1], $credentials[2]);
-                $r->cmd("enable");
-                $r->cmd("Configure term");
-                $r->cmd("interface FastEthernet 0/0");
-                $r->cmd("ppp lcp echo-request interval 200");
-                $r->cmd("ppp lcp echo-request timeout  200");
-                $r->close;
-                print("$_ update \n");
-        }
-        }
-        last;
-                                }
-close ($FILE);
-print ("Completed \n");
