@@ -43,6 +43,9 @@ while (<$FILE>){
 					$r->cmd("interface FastEthernet 0/0");
 					$r->cmd("ppp lcp echo-request interval 200");
 					$r->cmd("ppp lcp echo-request timeout  200");
+					$r->cmd("write");
+					$r->cmd("y");
+					
 					$r->close;
 					sleep 1;
 					print("$ip update \n");
