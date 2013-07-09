@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+use LWP::UserAgent;  
+use HTTP::Cookies;
+use MIME::Base64; 
+
+	
+my ($response,$request,$auth);
+my $cookie_jar = HTTP::Cookies->new(ignore_discard => 1);
+open (FILE, "<./ip");
+	 
+my $self=LWP::UserAgent->new;  
+while (<FILE>){	
+	my $ip=$_;
+	$ip=~s/\s+//g;
+	$ip=~s/"//g;
+	$ip="http://".$ip."/";
+	warn $ip;
+ 	$auth = encode_base64("github:github");
+	#warn $auth;
+	$self->cookie_jar($cookie_jar);
+	$request = new HTTP::Request(GET => $ip."upload/apos"); 
+	$request->header('Cookie' => 'sessionid="1"; auth=nok;');
+	$request->header('Authorization' => "Basic ".$auth);
+	$response = $self->request($request);
+	#warn $response->content;
+		
+	my $name="/var/www/provisioning.ertelecom.ru/cgi-bin/firmware/ap100b_g2_v8_41_086.bin";
+
+	$request=new HTTP::Request(POST=>$ip."upload/apos");
+        open (my $fh, "<$name");
+	binmode($fh);
+
+	my $header = HTTP::Headers->new;
+	
+	$request->header('Content-Type' => 'multipart/form-data; boundary='.$boundary);
+	$header->header('Content-Disposition' => 'form-data; name="apos"; filename="ap100b_g2_v8_41_086.bin"'); 
+	$request->header('Cookie' => 'sessionid="1"; auth=nok;');
+        $request->header('Authorization' => "Basic ".$auth);
+	$request->header('User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:5.0.1) Gecko/20100101 Firefox/5.0.1');
+	$request->header('Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
+	$request->header('Accept-Language' => 'ru-ru,ru;q=0.8,en-us;q=0.5,en;q=0.3');
+	$request->header('Accept-Encoding' => 'gzip, deflate');
+	$request->header('Accept-Charset' => 'windows-1251,utf-8;q=0.7,*;q=0.8');
+	$request->header('Connection' => 'keep-alive');
+	my $file_content = HTTP::Message->new($header);
+	$file_content->add_content($_) while <$fh>;
+	$file_content->add_content($config);
+	$request->add_part($file_content);
+	close $fh;
+	$response = $self->request($request);
+	warn $response->content;
+
+	$request=new HTTP::Request(GET=>$ip."exec/reboot");
+	$request->header('Cookie' => 'sessionid="1"; auth=nok;');
+	$request->header('Authorization' => "Basic ".$auth);
+
+	#warn $request->as_string;
+	$response = $self->request($request);
+#	warn $response->content
+}
+print "Ready /n";
