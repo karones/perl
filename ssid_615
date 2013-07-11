@@ -1,0 +1,89 @@
+#!/usr/bin/perl
+#use strict;
+use LWP::UserAgent;
+
+go1:
+proc();
+
+sub proc{
+ open (FILE2, ">>./ssid.txt");
+ my $self=LWP::UserAgent->new;
+ $self->timeout(2);
+ $post=new HTTP::Request(GET=>"http://192.168.0.1/");
+ $response=$self->request($post);
+ $post=new HTTP::Request(GET=>"http://192.168.0.1/index.cgi?v2=y&rq=4&res_json0=y&res_config_action0=1&res_config_id0=35&res_struct_size0=0&res_json1=y&res_config_action1=1&res_config_id1=37&res_struct_size1=0&res_json2=y&res_config_action2=1&res_config_id2=1&res_struct_size2=0&res_json3=y&res_config_action3=1&res_config_id3=164&res_struct_size3=0&proxy=y");
+ $header = HTTP::Headers->new;
+
+ $post->header('User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:5.0.1) Gecko/20100101 Firefox/5.0.1');
+        $post->header('Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
+        $post->header('Accept-Language' => 'ru-ru,ru;q=0.8,en-us;q=0.5,en;q=0.3');
+        $post->header('Accept-Encoding' => 'gzip, deflate');
+        $post->header('Accept-Charset' => 'windows-1251,utf-8;q=0.7,*;q=0.8');
+        $post->header('Connection' => 'keep-alive');
+my $response=$self->request($post);
+
+my $message=$response->content;
+#print ($message);
+my $ssid; my $key;
+my $login;
+my $password;
+my @chars=("A".."Z", "a".."z",0..9);
+$password=join("",@chars[map{rand @chars}(1..8)]); $login=join("",@chars[map{rand @chars}(1..8)]); warn $login; warn $password; for my $s(split('\r?\n', $message)){
+  if ($s=~m/"WscSSID": "/){
+		$s=~s/"\w+": //g;
+		$s=~s/"//g;
+		$s=~s/\s//g;
+		$ssid=$s;
+	#	warn $ssid	;
+		}
+	if ($s=~/"WscEncKey":/){
+		$s=~s/"\w+": //g;
+		$s=~s/"//g;
+		$s=~s/\s//g;
+		$key=$s;
+	#	warn $key;
+	}
+}
+$ssid.=": $key \n";
+warn $ssid;
+print (FILE2 $ssid);
+close (FILE2);	
+$post=new HTTP::Request(GET=>"http://192.168.0.1/index.cgi?v2=y&rq=4&res_json0=y&res_data_type0=json&res_config_action0=3&res_config_id0=35&res_struct_size0=0&res_json1=y&res_data_type1=json&res_config_action1=3&res_config_id1=36&res_struct_size1=0&res_json2=y&res_data_type2=json&res_config_action2=3&res_config_id2=1&res_struct_size2=0&res_cmd3=20&res_buf0={%22mbssidNum%22:1,%22Radio%22:true,%22MaxStaNum%22:%220%22,%22RADIUS_Server%22:%22192.168.0.254%22,%22HideSSID%22:false,%22mbssidCur%22:1,%22RADIUS_Key%22:%22dlink%22,%22CountryCode%22:%22RU%22,%22BandwidthAvailable%22:[{%22Name%22:%2220MHz%22,%22Id%22:%220%22},{%22Name%22:%2240MHz%22,%22Id%22:%223%22},{%22Name%22:%2220/40MHz%20-%22,%22Id%22:%221%22},{%22Name%22:%2220/40MHz%20+%22,%22Id%22:%222%22}],%22WirelessMode%22:%229%22,%22RADIUS_Port%22:%221812%22,%22Channel%22:%22auto%22,%22RekeyInterval%22:%223600%22,%22AuthAvailable%22:[{%22Name%22:%22Open%22,%22Id%22:%22OPEN%22},{%22Name%22:%22Shared%22,%22Id%22:%22SHARED%22},{%22Name%22:%22WPA%22,%22Id%22:%22WPA%22},{%22Name%22:%22WPA-PSK%22,%22Id%22:%22WPAPSK%22},{%22Name%22:%22WPA2%22,%22Id%22:%22WPA2%22},{%22Name%22:%22WPA2-PSK%22,%22Id%22:%22WPA2PSK%22},{%22Name%22:%22WPA/WPA2%20mixed%22,%22Id%22:%22WPA1WPA2%22},{%22Name%22:%22WPA-PSK/WPA2-PSK%20mixed%22,%22Id%22:%22WPAPSKWPA2PSK%22}],%22ModeAvailable%22:[{%22Name%22:%22802.11%20B/G%20mixed%22,%22Id%22:%220%22},{%22Name%22:%22802.11%20B/G/N%20mixed%22,%22Id%22:%229%22},{%22Name%22:%22802.11%20N%22,%22Id%22:%2215%22}],%22apcli%22:{%22ApCliKey4Str%22:%22%22,%22ApCliEnable%22:false,%22ApCliEncrypType%22:%22%22,%22ApCliSsid%22:%22%22,%22ApCliKey1Str%22:%22%22,%22ApCliAuthMode%22:%22OPEN%22,%22ApCliBssid%22:%22%22,%22ApCliDefaultKeyId%22:%22%22,%22ApCliKey2Str%22:%22%22,%22ApCliKey3Str%22:%22%22,%22ApCliWPAPSK%22:%22%22},%22wds%22:{%22WdsEncrypType%22:%22NONE%22,%22WdsKey%22:%22%22,%22Wds4Mac%22:%22%22,%22WdsPhyMode%22:%22%22,%22WdsEnable%22:%220%22,%22Wds1Mac%22:%22%22,%22Wds2Mac%22:%22%22,%22Wds3Mac%22:%22%22},%22addon_settings%22:{%22TxPower%22:%22100%22,%22DtimPeriod%22:%221%22,%22StationKeepAlive%22:%220%22,%22BeaconPeriod%22:%22100%22,%22RTSThreshold%22:%222347%22,%22BandWidth%22:%221%22,%22FragThreshold%22:%222346%22,%22BGProtection%22:%220%22,%22HTGI%22:%221%22,%22TxPreamble%22:1},%22wps%22:{%22WscEncrypType%22:%22AES%22,%22WscEnable%22:false,%22WscConfigured%22:false,%22WscAuth%22:%22WPA2PSK%22,%22WscSSID%22:%22WiFi-DOM.ru-4747%22,%22WscEncKey%22:%22tRuQcJs95N%22},%22mbssid%22:[{%22Key1Type%22:%221%22,%22Key3Type%22:%221%22,%22DefaultKeyID%22:%222%22,%22PreAuth%22:false,%22AccessPolicy%22:0,%22WPAPSK%22:%22tRuQcJs95N%22,%22Key4Str%22:%22%22,%22SSID%22:%22WiFi-DOM.ru-4747%22,%22Key3Str%22:%22%22,%22Key2Type%22:%221%22,%22BSSID%22:%2290:94:E4:B3:D6:14%22,%22Key1Str%22:%22%22,%22Key2Str%22:%22%22,%22AuthMode%22:%22WPA2PSK%22,%22AccessControlList%22:[],%22EncrypType%22:%22AES%22,%22IEEE8021X%22:%220%22}],%22ChannelList%22:[%22auto%22,%221%22,%222%22,%223%22,%224%22,%225%22,%226%22,%227%22,%228%22,%229%22,%2210%22,%2211%22,%2212%22,%2213%22]}&res_buf1={%22mbssidNum%22:1,%22Radio%22:true,%22MaxStaNum%22:%220%22,%22RADIUS_Server%22:%22192.168.0.254%22,%22HideSSID%22:false,%22mbssidCur%22:1,%22RADIUS_Key%22:%22dlink%22,%22CountryCode%22:%22RU%22,%22BandwidthAvailable%22:[{%22Name%22:%2220MHz%22,%22Id%22:%220%22},{%22Name%22:%2240MHz%22,%22Id%22:%223%22},{%22Name%22:%2220/40MHz%20-%22,%22Id%22:%221%22},{%22Name%22:%2220/40MHz%20+%22,%22Id%22:%222%22}],%22WirelessMode%22:%229%22,%22RADIUS_Port%22:%221812%22,%22Channel%22:%22auto%22,%22RekeyInterval%22:%223600%22,%22AuthAvailable%22:[{%22Name%22:%22Open%22,%22Id%22:%22OPEN%22},{%22Name%22:%22Shared%22,%22Id%22:%22SHARED%22},{%22Name%22:%22WPA%22,%22Id%22:%22WPA%22},{%22Name%22:%22WPA-PSK%22,%22Id%22:%22WPAPSK%22},{%22Name%22:%22WPA2%22,%22Id%22:%22WPA2%22},{%22Name%22:%22WPA2-PSK%22,%22Id%22:%22WPA2PSK%22},{%22Name%22:%22WPA/WPA2%20mixed%22,%22Id%22:%22WPA1WPA2%22},{%22Name%22:%22WPA-PSK/WPA2-PSK%20mixed%22,%22Id%22:%22WPAPSKWPA2PSK%22}],%22ModeAvailable%22:[{%22Name%22:%22802.11%20B/G%20mixed%22,%22Id%22:%220%22},{%22Name%22:%22802.11%20B/G/N%20mixed%22,%22Id%22:%229%22},{%22Name%22:%22802.11%20N%22,%22Id%22:%2215%22}],%22apcli%22:{%22ApCliKey4Str%22:%22%22,%22ApCliEnable%22:false,%22ApCliEncrypType%22:%22%22,%22ApCliSsid%22:%22%22,%22ApCliKey1Str%22:%22%22,%22ApCliAuthMode%22:%22OPEN%22,%22ApCliBssid%22:%22%22,%22ApCliDefaultKeyId%22:%22%22,%22ApCliKey2Str%22:%22%22,%22ApCliKey3Str%22:%22%22,%22ApCliWPAPSK%22:%22%22},%22wds%22:{%22WdsEncrypType%22:%22NONE%22,%22WdsKey%22:%22%22,%22Wds4Mac%22:%22%22,%22WdsPhyMode%22:%22%22,%22WdsEnable%22:%220%22,%22Wds1Mac%22:%22%22,%22Wds2Mac%22:%22%22,%22Wds3Mac%22:%22%22},%22addon_settings%22:{%22TxPower%22:%22100%22,%22DtimPeriod%22:%221%22,%22StationKeepAlive%22:%220%22,%22BeaconPeriod%22:%22100%22,%22RTSThreshold%22:%222347%22,%22BandWidth%22:%221%22,%22FragThreshold%22:%222346%22,%22BGProtection%22:%220%22,%22HTGI%22:%221%22,%22TxPreamble%22:1},%22wps%22:{%22WscEncrypType%22:%22AES%22,%22WscEnable%22:false,%22WscConfigured%22:false,%22WscAuth%22:%22WPA2PSK%22,%22WscSSID%22:%22WiFi-DOM.ru-4747%22,%22WscEncKey%22:%22tRuQcJs95N%22},%22mbssid%22:[{%22Key1Type%22:%221%22,%22Key3Type%22:%221%22,%22DefaultKeyID%22:%222%22,%22PreAuth%22:false,%22AccessPolicy%22:0,%22WPAPSK%22:%22tRuQcJs95N%22,%22Key4Str%22:%22%22,%22SSID%22:%22WiFi-DOM.ru-4747%22,%22Key3Str%22:%22%22,%22Key2Type%22:%221%22,%22BSSID%22:%2290:94:E4:B3:D6:14%22,%22Key1Str%22:%22%22,%22Key2Str%22:%22%22,%22AuthMode%22:%22WPA2PSK%22,%22AccessControlList%22:[],%22EncrypType%22:%22AES%22,%22IEEE8021X%22:%220%22}],%22ChannelList%22:[%22auto%22,%221%22,%222%22,%223%22,%224%22,%225%22,%226%22,%227%22,%228%22,%229%22,%2210%22,%2211%22,%2212%22,%2213%22]}&res_buf2={%22wan1%22:{%22enable%22:true,%22max_count%22:2,%22mtu%22:1500,%22mac%22:%2290:94:E4:B3:D6:14%22,%22port%22:%22Internet%22,%22type%22:%22ethernet%22,%22is_wan%22:true,%22services%22:{%22wan1_1%22:{%22level%22:3,%22rip%22:false,%22contag%22:1,%22firewall%22:true,%22auto%22:false,%22keep_alive%22:{%22interval%22:30,%22fails%22:3},%22l2_iface%22:%22wan1%22,%22enable%22:true,%22ppp_ip_ext%22:false,%22password%22:%22\$login%22,%22encrypt%22:%220%22,%22igmp%22:false,%22nat%22:true,%22type%22:%22ppp%22,%22name%22:%22DOM.RU%22,%22ac%22:%22DOM.RU%22,%22username%22:%22\$password%22,%22iface%22:%22ppp0%22,%22mtu%22:1492,%22static_ip%22:%22%22,%22auth%22:%220%22,%22contype%22:%22pppoe%22,%22gwif%22:true,%22is_wan%22:true,%22extra_options%22:%22%22,%22ppp_debug%22:false,%22pppoe_pass_through%22:false,%22unit%22:0,%22connection_status%22:%22Disconnected%22}}}}&proxy=y");
+ $post->header('User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:5.0.1) Gecko/20100101 Firefox/5.0.1');
+        $post->header('Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
+        $post->header('Accept-Language' => 'ru-ru,ru;q=0.8,en-us;q=0.5,en;q=0.3');
+        $post->header('Accept-Encoding' => 'gzip, deflate');
+        $post->header('Accept-Charset' => 'windows-1251,utf-8;q=0.7,*;q=0.8');
+        $post->header('Connection' => 'keep-alive');
+
+
+
+$response=$self->request($post);
+#warn $response->content;
+warn "41";
+$post=new HTTP::Request(GET=>"http://192.168.0.1/index.cgi?v2=y&rq=3&res_json0=y&res_config_action0=1&res_config_id0=129&res_struct_size0=0&res_json1=y&res_config_action1=1&res_config_id1=104&res_struct_size1=0&res_json2=y&res_config_action2=1&res_config_id2=1&res_struct_size2=0&proxy=y");
+ $post->header('User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:5.0.1) Gecko/20100101 Firefox/5.0.1');
+        $post->header('Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
+        $post->header('Accept-Language' => 'ru-ru,ru;q=0.8,en-us;q=0.5,en;q=0.3');
+        $post->header('Accept-Encoding' => 'gzip, deflate');
+        $post->header('Accept-Charset' => 'windows-1251,utf-8;q=0.7,*;q=0.8');
+        $post->header('Connection' => 'keep-alive');
+$response=$self->request($post);
+warn "44";
+
+$post=new HTTP::Request(GET=>"http://192.168.0.1/index.cgi?v2=y&rq=y&res_cmd=10&res_cmd_type=bl&proxy=y");
+warn "46";
+ $post->header('User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:5.0.1) Gecko/20100101 Firefox/5.0.1');
+        $post->header('Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
+        $post->header('Accept-Language' => 'ru-ru,ru;q=0.8,en-us;q=0.5,en;q=0.3');
+        $post->header('Accept-Encoding' => 'gzip, deflate');
+        $post->header('Accept-Charset' => 'windows-1251,utf-8;q=0.7,*;q=0.8');
+  
+	eval {
+	local $SIG{ALRM}=sub{goto go1};
+	alarm (30);
+	$response=$self->request($post);
+	alarm (0);
+	};
+goto go1;
+}
