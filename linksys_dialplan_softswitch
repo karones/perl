@@ -1,0 +1,214 @@
+#!/usr/bin/perl
+
+use Data::Dumper;
+use warnings;
+#use strict;
+use HTTP::Cookies;
+use MIME::Base64;
+use LWP::UserAgent;
+use DBI;
+use LWP::Authen::Digest
+
+# РЅР° РІС…РѕРґ РїРѕРґР°РµС‚СЃСЏ Р°Р№РґРё РіРѕСЂРѕРґР° Рё РµСЃР»Рё РµСЃС‚СЊ РєР»СЋС‡ -f С‚Рѕ Р±РµСЂРµС‚СЃСЏ СЃРїРёСЃРѕРє СЃ С„Р°Р№Р»Р° -s СЃРјРµРЅР° Р°РґСЂРµСЃР° СЃРѕС„С‚ СЃРІРёС‡Р° (РїСЂРё СЌС‚РѕРј РґРёР°Р»РїР»Р°РЅ РЅРµ РјРµРЅСЏРµС‚СЃСЏ)
+#warn @ARGV;
+#__ Р±Р»РѕРє РїРµСЂРµРјРµРЅРЅС‹С…_______________
+my $city_id;
+my $addres;
+my $passwod;
+my @ip;
+my $soft_addres;
+my $DBCONN;	
+my $DB_HOST;
+my $DB_DB;
+my $DB_USER;
+my $DB_PASS;
+
+#_________________________________
+
+
+while (<@ARGV>){
+if ($ARGV[0]=~m/\d+/){
+ $city_id=shift @ARGV;
+#warn @ARGV;
+	
+}elsif ($ARGV[0] eq '-f'){
+shift @ARGV;
+  $addres=shift @ARGV;
+}elsif($ARGV[0] eq '-s'){
+shift @ARGV;
+$soft_addres=shift @ARGV;
+}
+
+
+#warn @argv;
+}
+
+chomp $city_id;
+#warn $addres;
+if ($city_id == undef){
+warn "stop";
+die  "РќРµ РІРІРµРґРµРЅ city_id";
+}
+#my $password=password($city_id);
+init_params();
+$password=password($city_id);
+
+#warn $password;
+
+
+if (defined $addres){
+	open (FILE, "< $addres");
+	@ip=<FILE>;
+}else {@ip=dbi_request($city_id); }
+close_db();
+
+
+if (defined $soft_addres){
+while (<@ip>){
+soft_switch ($password, $_, $soft_addres);
+}
+}else{
+ 
+while (<@ip>){
+#warn $_;
+update ($password, $_);
+}
+}
+
+
+
+
+
+
+sub soft_switch{
+	my ($password, $ip, $new_ip_switch)=@_;
+	#warn @_;
+        my ($password, $ip)=@_;
+        chomp $password;
+        warn $password;
+        $ip=~s/"//g;
+        chomp $ip;
+        warn $ip;
+        my $ua=LWP::UserAgent->new;
+        $ua->credentials(
+                                $ip.':80',
+                                'spa admin',
+                                'admin', "$password"
+                        );
+        my $cookie_jar = HTTP::Cookies->new(ignore_discard => 1);
+        $ua->cookie_jar($cookie_jar);
+        my $request = new HTTP::Request(GET =>"http://$ip:80/admin/voice/advanced");
+        $request->header('Connection' => 'keep-alive');
+        warn $request->as_string;
+        my $response=$ua->request($request);
+        #warn $response->code;
+        #warn $response->content;
+	$request = new HTTP::Request(POST => "http://$ip/admin/voice/asipura.spa", ['Content-Type' => 'application/x-www-form-urlencoded'],"21359=$new_ip_switch&879=$new_ip_switch");
+	my $response=$ua->request($request);
+
+
+
+}
+
+
+sub dbi_request{
+	$city_id=$_[0];
+	my $sth = $DBCONN->prepare("select ip from p_device where p_hostmodel_id =1 and p_city_id in ($city_id)  order by lastpolled desc ");
+	my $rv = $sth->execute;
+	while (@row=$sth->fetchrow_array){
+		push (@ip, $row[0]);
+		}
+	return @ip;	
+
+
+
+}
+
+sub password{
+	my $city_id=$_[0];
+	my @row;
+	warn $city_id;
+	my $sth = $DBCONN->prepare("select password from p_credentials where p_hostmodel_id=1 and p_city_id=$city_id");
+        my $rv = $sth->execute;
+	@row = $sth->fetchrow_array;
+	#warn $row[0];
+	return $row[0];
+
+}
+
+sub update{
+	#warn @_;
+	my ($password, $ip)=@_;
+	chomp $password;
+	warn $password;
+	$ip=~s/"//g;
+	chomp $ip;
+	warn $ip;
+	my $ua=LWP::UserAgent->new;
+	$ua->credentials(
+				$ip.':80',
+				'spa admin',
+				'admin', "$password"
+			);
+	my $cookie_jar = HTTP::Cookies->new(ignore_discard => 1);
+	$ua->cookie_jar($cookie_jar);	
+	my $request = new HTTP::Request(GET =>"http://$ip:80/admin/voice/advanced");
+	$request->header('Connection' => 'keep-alive');
+	warn $request->as_string;
+	my $response=$ua->request($request);
+	#warn $response->code;
+	warn $response->content;
+	my $plan;
+	my $message=$response->content;
+	for my $s (split ('\r?\n', $message))
+		{
+		if ($s=~m/<td>Dial Plan:</){
+		#	print "$s \n\n\n";
+			 @plan=split('"',$s);
+		#	warn $plan[11];
+			last;
+			}	
+	
+	}
+	my $new_plan=$plan[11];
+	#$new_plan='(*[x*].|0[1-9]|0xx|1xxxx|[25]xxxxxx|8xxxxxxxxxx|810x.|7xxxxxxxxxx|710x.|8[25]x.|19000x.)';
+	$new_plan=~s/8\[25\]/8[125]/;
+	warn $new_plan;
+	#my $string='<?xml version="1.0" encoding="iso-8859-1"?><flat-profile><Line_Enable_2_>yes</Line_Enable_2_><Line_Enable_1_>no</Line_Enable_1_></flat-profile>';
+	$request = new HTTP::Request(POST => "http://$ip/admin/voice/asipura.spa", ['Content-Type' => 'application/x-www-form-urlencoded'],"31407=$new_plan&30767=$new_plan");
+	#$response=$ua->request($request);
+	#if ($response->code ==200)
+	open (FILE2, '>>./log_linksys);
+	print (FILE2 "$ip $new_plan \n");
+	close (FILE2);
+}
+
+
+
+sub init_db{
+	$DBCONN = DBI->connect("DBI:Pg:database=$DB_DB;host=$DB_HOST", $DB_USER, $DB_PASS, {AutoCommit => 1, RaiseError => 1, PrintError => 0});
+	if (!defined($DBCONN)){
+		die "Cant connect to $DB_DB!";
+	}  
+}
+
+sub init_params {
+	$DB_HOST='github';
+	$DB_DB='github';
+	$DB_USER='github';
+	$DB_PASS='github';
+	init_db();
+	
+}
+
+sub do_commit{
+	#debug_print('DEBUG',"Doing COMMIT");
+	$DBCONN->commit;
+}
+
+sub close_db{
+	$DBCONN->{RaiseError}=0;
+	$DBCONN->disconnect if defined $DBCONN;
+	undef $DBCONN;
+}
+
