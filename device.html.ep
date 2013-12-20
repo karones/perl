@@ -1,0 +1,99 @@
+% layout config 'layout';
+% my $otch= stash 'otch';
+% my $fwver=stash 'fwver';
+% my $test;
+% my $test_sort;
+% my $test_city;
+% my $hash_count_all;
+% my $hostmodel_sort;
+% my @hostmodel_sort;
+% my $keys;
+% my $city;
+% my $name;
+% my @key;
+% my $hostmodel_id=$id;
+% my $city_id;
+% my $model;
+
+<a href="javascript:history.back()" mce_href="javascript:history.back()" >Вернуться</a>
+<table  id="myTable" class="tablesorter" border="1" cellspacing="2" cellpadding="2" width="98%">
+<caption><%=$otch->{$hostmodel_id}->{all}->{name_model}%></caption>
+<thead> 
+<tr><%my $i=0;%>
+ <% for my $key (keys %{$fwver->{$hostmodel_id}->{all}}) { %>
+	<%$i=$i+2;%>
+	<% } %>
+</TR><TR></TR><TR><TD></TD>
+<% if ($i!=0){%>
+<TD COLSPAN=<%=$i%>>Нестандарт</TD>
+<%}%>
+<TD  COLSPAN=2>Стандарт</TD></TR><TR>
+
+<TD align="center"><font color="#0080FF">Город</TD>
+<% for my $key (keys %{$fwver->{$hostmodel_id}->{all}}) { %>
+<% if ($fwver->{$hostmodel_id}->{all}->{$key}->{'name'} eq ' ') { $fwver->{$hostmodel_id}->{all}->{$key}->{'name'}='Не известна';}%>
+<TH data-type="number", align="center" ><font color="#0080FF"> <%=$fwver->{$hostmodel_id}->{all}->{$key}->{'name'}%></Th><Th>%</Th></font>
+    <%  } %>
+<% $otch->{$hostmodel_id}->{all}->{fwversion}=~s/', '/, /;%>
+
+<Th data-type="number"><font color="#0080FF"><%=$otch->{$hostmodel_id}->{all}->{fwversion}%></Th></font>
+<TD><font color="#0080FF">%</TD></font>
+</TR>
+</thead>
+<tbody>
+<% for my $keys ( keys %{$otch->{all}}) { %>
+<% if (($otch->{all}->{$keys}->{russian_name} eq 'Дзержинск')||($otch->{all}->{$keys}->{russian_name} eq 'Волжский')||($otch->{all}->{$keys}->{russian_name} eq 'Нижнекамск')||($otch->{all}->{$keys}->{russian_name} eq 'По умолчанию')||($otch->{all}->{$keys}->{russian_name} eq 'Тестовый Пермь')||($otch->{all}->{$keys}->{russian_name} eq 'Энгельс')) { %><% next; %><% } %><% if ($otch->{all}->{$keys}->{russian_name} ne '') { %>
+	<% $name=$otch->{all}->{$keys}->{'russian_name'}; %>	
+<% $test->{$name}=$keys;  %>
+<% } %>
+<% } %>
+<% for my $name ( sort keys %{$test}) { %>
+<TR><TD align="center"><%=$otch->{$hostmodel_id}->{$test->{$name}}->{russian_name}%></TD>
+<% for my $key (keys %{$fwver->{$hostmodel_id}->{all}}) { %>
+<TD  align="right"><%=$fwver->{$hostmodel_id}->{$test->{$name}}->{$key}->{'count'}%></TD>
+<% if ($otch->{$hostmodel_id}->{$test->{$name}}->{hash_count_all}!=0) {%>
+<TD  align="right"><%=sprintf("%.2f", $fwver->{$hostmodel_id}->{$test->{$name}}->{$key}->{'count'}/$otch->{$hostmodel_id}->{$test->{$name}}->{hash_count_all}*100)%></TD>
+<% }else{ %>
+<TD align="right"><%=sprintf("%.2f", 0)%></TD>
+<% } %>
+<% } %>
+<TD align="right"><%=$otch->{$hostmodel_id}->{$test->{$name}}->{hash_count_all}-$otch->{$hostmodel_id}->{$test->{$name}}->{hash_count}%></TD>
+<% if ($otch->{$hostmodel_id}->{$test->{$name}}->{hash_count_all}!=0) {%>
+<TD align="right"><%=sprintf("%.2f", ($otch->{$hostmodel_id}->{$test->{$name}}->{hash_count_all}-$otch->{$hostmodel_id}->{$test->{$name}}->{hash_count})/$otch->{$hostmodel_id}->{$test->{$name}}->{hash_count_all}*100)%></TD>
+<% }else{ %>
+<TD align="right"><%=sprintf("%.2f", 0)%></TD>
+<% } %>
+</tr>
+<% } %>
+</tbody>
+<tr><td align="center">Итого</td>
+<% for my $key (keys %{$fwver->{$hostmodel_id}->{all}}) { %>
+<TD  align="right"><%=$fwver->{$hostmodel_id}->{all}->{$key}->{'count'}%></TD>
+<% if ($otch->{$hostmodel_id}->{all}->{hash_count_all}!=0) {%>
+<TD align="right"><%=sprintf("%.2f", $fwver->{$hostmodel_id}->{all}->{$key}->{'count'}/$otch->{$hostmodel_id}->{all}->{hash_count_all}*100)%></TD>
+<% } %>
+<% } %>
+<TD align="right"><%=$otch->{$hostmodel_id}->{all}->{hash_count_all}-$otch->{$hostmodel_id}->{all}->{hash_count}%></TD>
+(<%if ($otch->{$hostmodel_id}->{all}->{hash_count_all}!=0){%>
+<TD align="right"><%=sprintf("%.2f", ($otch->{$hostmodel_id}->{all}->{hash_count_all}-$otch->{$hostmodel_id}->{all}->{hash_count})/$otch->{$hostmodel_id}->{all}->{hash_count_all}*100)%></TD>
+<%}else{%>
+<TD align="right"><%=sprintf("%.2f",0)%></TD>
+<%}%>
+</tr>
+</table>
+
+
+<script>
+ $(document).ready(function() 
+    { 
+        $("#myTable").tablesorter(); 
+    } 
+); 
+    
+$(document).ready(function() 
+    { 
+        $("#myTable").tablesorter( {sortList: [[0,0], [1,0]]} ); 
+    } 
+); 
+    
+    </script>
