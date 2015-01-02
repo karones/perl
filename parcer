@@ -1,0 +1,64 @@
+#!/usr/bin/perl
+use Data::Dumper;
+use warnings;
+#use strict;
+use HTTP::Cookies;
+use MIME::Base64;
+use LWP::UserAgent;
+
+my @list;
+@list=proxy_prime_speed();
+#proxy_list_thread(@list);
+
+
+sub proxy_list_thread()
+{
+
+
+	my $ua=LWP::UserAgent->new;
+	my $request;
+	$ua->timeout(10);
+	foreach $i (@_){
+	
+	 $ua->proxy(['http'], "http://$i/");
+	$request = new HTTP::Request(GET =>"http://www.prime-speed.ru/proxy/free-proxy-list/all-working-proxies.php");
+	my $response=$ua->request($request);
+	if ($response->code==200)
+		{warn $i;}
+	}
+}
+
+
+
+
+sub proxy_prime_speed(){
+my $ua=LWP::UserAgent->new;
+my $header = HTTP::Headers->new;
+my $request;
+$request = new HTTP::Request(GET =>"http://hideme.ru/proxy-list/?type=h&anon=4");
+$request->header('User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:5.0.1) Gecko/20100101 Firefox/5.0.1');
+$request->header('Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
+$request->header('Accept-Language' => 'ru-ru,ru;q=0.8,en-us;q=0.5,en;q=0.3');
+#$request->header('Accept-Encoding' => 'gzip, deflate');
+#$request->header('Accept-Charset' => 'windows-1251,utf-8;q=0.7,*;q=0.8');
+$request->header('Connection' => 'keep-alive');
+
+#$request = new HTTP::Request(GET =>"http://www.prime-speed.ru/proxy/free-proxy-list/all-working-proxies.php"); сайт гавно ниче не работает
+
+#http://www.google-proxy.net/ ходим на этот
+my $response=$ua->request($request);
+#warn $response->content;
+$message=$response->content;
+my @list;
+my $i=0;
+open (FILE, ">1"); 
+
+for my $s (split ('<td class=tdl>', $message))
+{
+if ($s=~m/^\d.\d.\d.\d/){
+print (FILE "$s\n\n");
+}
+}
+#возвращаем список
+return @list;
+}
