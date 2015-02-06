@@ -1,0 +1,36 @@
+
+#!/usr/bin/perl
+
+use Data::Dumper;
+use warnings;
+#use strict;
+use HTTP::Cookies;
+use MIME::Base64;
+use LWP::UserAgent;
+
+my $ua=LWP::UserAgent->new;
+my $request;
+
+
+for my $i(0..400){
+
+$request = new HTTP::Request(GET =>"http://cam.pddd.perm.ru:81/?camera=$i");
+my $response=$ua->request($request);
+open (FILE, ">$i.jpg"); 
+ binmode(FILE);
+print FILE $response->content;
+
+close (FILE); 
+}
+for my $k(0..110){ 
+$request = new HTTP::Request(GET =>"http://cam.pddd.perm.ru:81/?c=$k");
+$response=$ua->request($request);
+open (FILE, ">a$k.jpg"); 
+ binmode(FILE);
+print FILE $response->content;
+
+close (FILE); 
+
+}
+# warn $response->content;
+
